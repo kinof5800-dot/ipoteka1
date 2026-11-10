@@ -33,6 +33,9 @@ body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-app
 .opt{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:var(--card);color:var(--tx);border:2px solid var(--bd);border-radius:18px;padding:14px;margin-bottom:11px;font:inherit;font-weight:600;cursor:pointer;min-height:62px}
 .opt b{flex:none;width:34px;height:34px;border-radius:11px;background:var(--ac2);color:var(--ac);display:grid;place-items:center;font-size:15px}
 .opt:active,.opt.sel{border-color:var(--ac);background:var(--ac2);transform:scale(.99)}
+.big{font-size:44px;font-weight:800;text-align:center;color:var(--ac);margin:10px 0 6px}
+input[type=range]{width:100%;accent-color:var(--ac);margin:18px 0 26px;height:34px}
+.go2{display:block;width:100%;background:var(--gd);color:#2a1d00;border:0;border-radius:16px;padding:16px;font:inherit;font-size:17px;font-weight:800;cursor:pointer}
 .rh{padding:22px 18px 6px;animation:up .3s ease}
 .rh h1{font-size:30px;line-height:1.1;margin:0 0 8px;font-weight:800;letter-spacing:-.5px}
 .rh p{margin:0;color:var(--mu)}
@@ -63,7 +66,8 @@ var N=['new','ready','green'],R=['ready','green'],AL=['new','ready','sec','green
 var Q=[
 {k:'own',t:'Сіздің немесе жұбайыңыздың меншігінде тұрғын үй бар ма?',o:[['no','Жоқ, бірінші үй'],['yes','Иә, бар']]},
 {k:'dep',t:'Отбасы банкте тұрғын үй жинағыңыз (депозит) бар ма?',o:[['none','Жоқ'],['short','Бар, 3 жылға дейін'],['long','Бар, 3 жылдан көп']]},
-{k:'down',t:'Үй құнының қанша бөлігі өз қаражатыңызда бар?',o:[['0','10%-дан аз'],['10','10–19%'],['20','20–29%'],['30','30–49%'],['50','50% және одан көп']]},
+{k:'dn',n:1,t:'Бастапқы жарнаға қанша қаражатыңыз бар?',min:0,max:60,step:0.5,def:10},
+{k:'pr',n:1,t:'Қанша млн ₸ тұратын үй алғыңыз келеді?',min:10,max:100,step:1,def:30},
 {k:'job',t:'Қай салада жұмыс істейсіз?',o:[['ind','Өнеркәсіп, көлік, ауыл шаруашылығы, энергетика'],['oth','Басқа сала немесе бюджет (ресми табыс)'],['self','Табысым ресми расталмайды']]},
 {k:'type',t:'Қандай үй қарастырудасыз?',o:[['new','Жаңа ЖК, құрылыс үстінде'],['ready','Жаңа ЖК, пайдалануға берілген'],['sec','Қайталама баспана'],['green','«Жасыл» сертификаты (OMIR) бар ЖК']]},
 {k:'city',t:'Үйді қай жерден іздейсіз?',o:[['big','Алматы, Астана'],['mid','Шымкент, Атырау, Ақтау'],['oth','Басқа өңір']]},
@@ -91,25 +95,28 @@ var PR=[
 var A={},i=-1,app=document.getElementById('app');
 function rt(r,d){if(typeof r=='number')return r;if(d<=r[0][0])return r[0][1];for(var k=1;k<r.length;k++){if(d<=r[k][0]){var a=r[k-1],b=r[k];return a[1]+(b[1]-a[1])*(d-a[0])/(b[0]-a[0])}}return r[r.length-1][1]}
 function link(t){return 'https://wa.me/'+WA+'?text='+encodeURIComponent(t)}
-function card(p,f,idx){return '<div class="card'+(f?' f':'')+'" style="animation-delay:'+(idx*.06)+'s">'+(f?'<span class="lb">Бірінші ұсыныс</span><br>':'')+'<div class="nm">'+p.n+'</div><div class="mu">'+p.o+'</div><a class="wa" href="'+link('Сәлеметсіз бе! Мені «'+p.n+'» ('+p.o+') ипотекасы қызықтырады. Тегін консультация алғым келеді.')+'" target="_blank" rel="noopener">'+WS+'Тегін консультация алу</a></div>'}
+function card(p,f,idx){return '<div class="card'+(f?' f':'')+'" style="animation-delay:'+(idx*.06)+'s">'+(f?'<span class="lb">Бірінші ұсыныс</span><br>':'')+'<div class="nm">'+p.n+'</div><div class="mu">'+p.o+'</div><div class="mu" style="margin-top:8px;font-weight:700">Бастапқы жарна: '+m(A.pr*p.d/100)+' млн ₸ бастап</div><a class="wa" href="'+link('Сәлеметсіз бе! Мені «'+p.n+'» ('+p.o+') ипотекасы қызықтырады. Тегін консультация алғым келеді.')+'" target="_blank" rel="noopener">'+WS+'Тегін консультация алу</a></div>'}
 function start(){A={};i=-1;render()}
+function sv(v){A[Q[i].k]=+v;document.getElementById('pv').textContent=v}
+function nx(){var q=Q[i];if(A[q.k]===undefined)A[q.k]=q.def;i++;render()}
+function m(x){return (Math.round(x*10)/10).toString().replace('.',',')}
 function pick(k,v){A[k]=v;i++;render()}
 function render(){
  window.scrollTo(0,0);
- if(i<0){app.innerHTML='<div class="hero"><div class="ico">🏠</div><h1>Өзіңізге сай ипотеканы табыңыз</h1><p>7 қысқа сұраққа жауап беріңіз, біз 17 бағдарламаның ішінен өзіңізге қолайлыларын таңдап береміз.</p><div class="chips"><span>⏱ 2 минут</span><span>17 бағдарлама</span><span>Тегін</span></div></div><button class="go" onclick="i=0;render()">Тестті бастау</button><p class="note">Нәтиже қаржылық кеңес емес. Шарттарды консультацияда нақтылаңыз.</p>';return}
+ if(i<0){app.innerHTML='<div class="hero"><div class="ico">🏠</div><h1>Өзіңізге сай ипотеканы табыңыз</h1><p>8 қысқа сұраққа жауап беріңіз, біз 17 бағдарламаның ішінен өзіңізге қолайлыларын таңдап береміз.</p><div class="chips"><span>⏱ 2 минут</span><span>17 бағдарлама</span><span>Тегін</span></div></div><button class="go" onclick="i=0;render()">Тестті бастау</button><p class="note">Нәтиже қаржылық кеңес емес. Шарттарды консультацияда нақтылаңыз.</p>';return}
  if(i>=Q.length){return result()}
  var q=Q[i],h='',s='';
  for(var k=0;k<Q.length;k++)s+='<i'+(k<=i?' class="on"':'')+'></i>';
- q.o.forEach(function(o,n){h+='<button class="opt'+(A[q.k]==o[0]?' sel':'')+'" onclick="pick(\''+q.k+'\',\''+o[0]+'\')"><b>'+'ABCDE'.charAt(n)+'</b><span>'+o[1]+'</span></button>'});
+ if(q.n){var v=A[q.k]!==undefined?A[q.k]:q.def;h='<div class="big"><span id="pv">'+v+'</span> млн ₸</div><input type="range" min="'+q.min+'" max="'+q.max+'" step="'+q.step+'" value="'+v+'" oninput="sv(this.value)"><button class="go2" onclick="nx()">Келесі</button>'}else q.o.forEach(function(o,n){h+='<button class="opt'+(A[q.k]==o[0]?' sel':'')+'" onclick="pick(\''+q.k+'\',\''+o[0]+'\')"><b>'+'ABCDE'.charAt(n)+'</b><span>'+o[1]+'</span></button>'});
  app.innerHTML='<div class="top"><div class="seg">'+s+'</div><button class="back" onclick="i--;render()">← '+(i>0?'Артқа':'Басты бет')+'</button></div><div class="q"><h2>'+q.t+'</h2>'+h+'</div>';
 }
 function result(){
- var d=+A.down,ok=[],no=[];
+ var P=A.pr,D=Math.min(A.dn,P),d=Math.round(D/P*10000)/100,ok=[],no=[];
  PR.forEach(function(p){
   var why='';
   if(p.no&&A.own=='yes')why='Тұрғын үйі жоқтарға арналған';
   else if(p.dep&&A.dep=='none')why='Отбасы банкте жинақ қажет';
-  else if(d<p.d)why='Өз қаражатыңыз кемінде '+p.d+'% болуы керек';
+  else if(d<p.d)why='Бастапқы жарна кемінде '+m(P*p.d/100)+' млн ₸ болуы керек';
   else if(p.ty.indexOf(A.type)<0)why='Таңдаған үй түріне жарамайды';
   else if(p.ind&&A.job!='ind')why='Өнеркәсіп, көлік, ауыл шаруашылығы, энергетика қызметкерлеріне';
   else if(p.off&&A.job=='self')why='Ресми табыс қажет';
@@ -117,9 +124,10 @@ function result(){
   ok.push({p:p,sc:rt(p.r,d)*(p.sel&&A.wait=='fast'?1.25:1)});
  });
  ok.sort(function(a,b){return a.sc-b.sc});
- var h='<div class="rh"><h1>'+(ok.length?'Сізге '+ok.length+' бағдарлама сәйкес':'Толық сәйкестік табылмады')+'</h1><p>'+(ok.length?'Әрқайсысы бойынша тегін консультация алыңыз.':'Өз қаражатыңызды көбейтіп немесе үй түрін өзгертіп көріңіз.')+'</p></div>';
+ var h='<div class="rh"><h1>'+'Сізге бірнеше бағдарлама ұсынылды'+'</h1><p>'+(ok.length?'Әрқайсысы бойынша тегін консультация алыңыз.':'Консультант сізге ең қолайлы нұсқаларды таңдап береді.')+'</p></div>';
  ok.forEach(function(x,n){h+=card(x.p,n==0,n)});
- if(no.length){h+='<details class="x"><summary>Сәйкес келмейтіндер ('+no.length+')</summary><div class="in">';no.forEach(function(x){h+='<div class="ex"><b>'+x[0].n+'</b> <span class="mu">'+x[0].o+'</span><br><span class="mu">'+x[1]+'</span></div>'});h+='</div></details>'}
+ if(!ok.length)h+='<div class="card f"><div class="nm">Ипотека бойынша консультация</div><div class="mu">Жауаптарыңызға сай бағдарламаларды консультант таңдап береді</div><a class="wa" href="'+link('Сәлеметсіз бе! Ипотека бойынша тегін консультация алғым келеді.')+'" target="_blank" rel="noopener">'+WS+'Тегін консультация алу</a></div>';
+ if(no.length&&ok.length){h+='<details class="x"><summary>Сәйкес келмейтіндер ('+no.length+')</summary><div class="in">';no.forEach(function(x){h+='<div class="ex"><b>'+x[0].n+'</b> <span class="mu">'+x[0].o+'</span><br><span class="mu">'+x[1]+'</span></div>'});h+='</div></details>'}
  h+='<button class="again" onclick="start()">Тестті қайта өту</button><p class="dis">Шарттар жиі өзгереді. Өтінім беру алдында банктің ресми сайтында немесе консультацияда тексеріңіз.</p><a class="fab" href="'+link('Сәлеметсіз бе! Ипотека бойынша тегін консультация алғым келеді.')+'" target="_blank" rel="noopener">'+WS+'Консультантқа жазу</a>';
  app.innerHTML=h;
 }
